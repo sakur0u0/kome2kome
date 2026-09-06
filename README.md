@@ -13,6 +13,8 @@
 - **next/font**（Noto Serif JP / Noto Serif SC / Yuji Syuku（筆文字）/ Cinzel / Playfair Display / Inter）
 - **KanjiVG**（漢字の筆順パス。CC BY-SA 3.0 — フッターにクレジット表記）
 
+**公開 URL:** https://sakur0u0.github.io/kome2kome/ （GitHub Pages。`main` へ push すると自動で再デプロイ）
+
 ## 起動方法
 
 ```bash
@@ -25,6 +27,20 @@ npm run build    # 本番ビルド
 npm run start    # 本番サーバー
 npm run lint     # ESLint
 ```
+
+## デプロイ（GitHub Pages）
+
+- リポジトリ: https://github.com/sakur0u0/kome2kome
+- `.github/workflows/pages.yml` が `main` への push ごとに **静的エクスポート**（`next build` with `STATIC_EXPORT=1`）→ `out/` を Pages に配置します。
+- `NEXT_PUBLIC_BASE_PATH`（= `/kome2kome`）は `actions/configure-pages` が自動で渡します。`public/` の画像パスは `site.config.ts` で basePath を前置しています。
+- 静的エクスポート時は `next/image` の最適化 API が使えないため `images.unoptimized: true` になります（ローカルの `next dev` / `next start` は従来どおり最適化あり）。
+- 手元で同じ出力を確認するには:
+
+```bash
+STATIC_EXPORT=1 NEXT_PUBLIC_BASE_PATH=/kome2kome npm run build   # → out/
+```
+
+- 独自ドメインや画像最適化・OG 画像生成が必要になったら Vercel への移行が最短です（`npx vercel` でログイン → そのままデプロイ可。環境変数は不要）。
 
 ## ページ構成（七章）
 
