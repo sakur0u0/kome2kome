@@ -1,26 +1,305 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* ------------------------------------------------------------------
+ * Design Tokens
+ * ------------------------------------------------------------------ */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Colors
+     ※ --color-base があるため `text-base` は「文字色 = base」になる。
+        font-size の 1rem を指定したい場合は `text-[1rem]` を使う */
+  --color-base: #0a0a0a;
+  --color-base-soft: #111111;
+  --color-base-mist: #161616;
+  --color-gold: #d4af37;
+  --color-gold-light: #e9d18a;
+  --color-gold-deep: #9a7b22;
+  --color-ivory: #f5f5f5;
+  --color-mist: #888888;
+  --color-line: rgba(255, 255, 255, 0.08);
+
+  /* 水墨の幕（Plan A）: 和紙 / 墨 / 薄墨 / 朱（落款） */
+  --color-washi: #f4efe6;
+  --color-washi-deep: #e8e0cf;
+  --color-sumi: #1a1a1a;
+  --color-sumi-soft: #2a2a2a;
+  --color-usuzumi: #6b6b6b;
+  --color-shu: #b3262e;
+  --color-shu-deep: #8e1c22;
+  --color-line-ink: rgba(26, 26, 26, 0.12);
+
+  /* Typography (言語ごとに --lp-font-* が切り替わる) */
+  --font-display: var(--lp-font-display);
+  --font-body: var(--lp-font-body);
+  --font-accent: var(--lp-font-accent);
+  --font-latin: var(--font-cinzel), "Cinzel", "Times New Roman", serif;
+  --font-latin-italic: var(--font-playfair), "Playfair Display", Georgia,
+    serif;
+  --font-sans: var(--font-inter), "Inter", system-ui, sans-serif;
+  /* 言語に関係なく明朝体で描く漢字（ロゴのエンブレム・装飾文字） */
+  --font-kanji: var(--font-noto-serif-jp), "Yu Mincho", "YuMincho",
+    "Hiragino Mincho ProN", "Noto Serif JP", serif;
+  /* 筆文字（章番号・落款・ロゴの「米」） */
+  --font-brush: var(--font-yuji-syuku), "Yuji Syuku", var(--font-noto-serif-jp),
+    "Hiragino Mincho ProN", serif;
+
+  /* Motion */
+  --ease-elegant: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-silk: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Shadows */
+  --shadow-gold-glow: 0 0 40px rgba(212, 175, 55, 0.35);
+  --shadow-gold-glow-sm: 0 0 24px rgba(212, 175, 55, 0.25);
+
+  /* Spacing helpers */
+  --spacing-section: clamp(6rem, 14vw, 11rem);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ------------------------------------------------------------------
+ * 言語別フォントスタック
+ *   data-lang は LanguageProvider が <html> に付与する
+ * ------------------------------------------------------------------ */
+:root,
+:root[data-lang="ja"] {
+  --lp-font-display: var(--font-noto-serif-jp), "Yu Mincho", "YuMincho",
+    "Hiragino Mincho ProN", "Noto Serif JP", serif;
+  --lp-font-body: var(--font-noto-serif-jp), "Yu Mincho", "YuMincho",
+    "Hiragino Mincho ProN", "Noto Serif JP", serif;
+  --lp-font-accent: var(--font-noto-serif-jp), "Yu Mincho", "YuMincho", serif;
+  --lp-letter-spacing-display: 0.08em;
+  --lp-letter-spacing-body: 0.04em;
+  --lp-line-height-body: 2.1;
+  /* キャッチコピーの文字サイズ（CJK は 1 行が短いので大きめに） */
+  --lp-hero-size: clamp(2.1rem, 9vw, 4.75rem);
+  --lp-hero-leading: 1.35;
+}
+
+:root[data-lang="en"] {
+  --lp-font-display: var(--font-cinzel), "Cinzel", "Times New Roman", serif;
+  --lp-font-body: var(--font-inter), "Inter", system-ui, sans-serif;
+  --lp-font-accent: var(--font-playfair), "Playfair Display", Georgia, serif;
+  --lp-letter-spacing-display: 0.04em;
+  --lp-letter-spacing-body: 0.01em;
+  --lp-line-height-body: 1.9;
+  --lp-hero-size: clamp(1.6rem, 6.6vw, 4.5rem);
+  --lp-hero-leading: 1.25;
+}
+
+:root[data-lang="zh"] {
+  --lp-font-display: var(--font-noto-serif-sc), "Noto Serif SC", "Songti SC",
+    "SimSun", serif;
+  --lp-font-body: var(--font-noto-serif-sc), "Noto Serif SC", "Songti SC",
+    "SimSun", serif;
+  --lp-font-accent: var(--font-noto-serif-sc), "Noto Serif SC", serif;
+  --lp-letter-spacing-display: 0.1em;
+  --lp-letter-spacing-body: 0.05em;
+  --lp-line-height-body: 2.1;
+  --lp-hero-size: clamp(2.1rem, 9vw, 4.75rem);
+  --lp-hero-leading: 1.35;
+}
+
+/* ------------------------------------------------------------------
+ * トーン（幕ごとの前景色）
+ *   dark: 漆黒の幕 / light: 和紙の幕。Header は下にある幕に合わせて切り替える
+ * ------------------------------------------------------------------ */
+:root,
+[data-tone="dark"] {
+  --tone-fg: var(--color-ivory);
+  --tone-fg-muted: rgba(245, 245, 245, 0.62);
+  --tone-fg-faint: rgba(245, 245, 245, 0.4);
+  --tone-line: rgba(255, 255, 255, 0.1);
+  --tone-accent: var(--color-gold);
+  --tone-glass: rgba(10, 10, 10, 0.55);
+}
+
+[data-tone="light"] {
+  --tone-fg: var(--color-sumi);
+  --tone-fg-muted: rgba(26, 26, 26, 0.68);
+  --tone-fg-faint: rgba(26, 26, 26, 0.45);
+  --tone-line: rgba(26, 26, 26, 0.12);
+  --tone-accent: var(--color-shu);
+  --tone-glass: rgba(244, 239, 230, 0.72);
+}
+
+/* ------------------------------------------------------------------
+ * Base
+ * ------------------------------------------------------------------ */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
+  background-color: var(--color-base);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-base);
+  color: var(--color-ivory);
+  font-family: var(--lp-font-body);
+  letter-spacing: var(--lp-letter-spacing-body);
+  font-feature-settings: "palt" 1, "kern" 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: rgba(212, 175, 55, 0.35);
+  color: var(--color-ivory);
+}
+
+/* 細く控えめなスクロールバー */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-base);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.35);
+  border-radius: 999px;
+}
+
+:focus-visible {
+  outline: 1px solid var(--color-gold);
+  outline-offset: 4px;
+}
+
+/* ------------------------------------------------------------------
+ * Custom Utilities
+ * ------------------------------------------------------------------ */
+
+/* ガラスモーフィズム（背景色・枝線は Tailwind クラス側で重ねる）
+   ※ -webkit- 接頭辞は Lightning CSS が必要に応じて自動付与するため書かない
+     （手書きすると unprefixed 宣言が削除されてしまう） */
+@utility glass {
+  backdrop-filter: blur(22px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+@utility glass-strong {
+  backdrop-filter: blur(32px) saturate(150%);
+}
+
+/* 金箔のグラデーション文字 */
+@utility text-gold-gradient {
+  background-image: linear-gradient(
+    115deg,
+    #b8942a 0%,
+    #e9d18a 35%,
+    #d4af37 55%,
+    #f3e3ac 80%,
+    #b8942a 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* 見出し用のトラッキング（言語別） */
+@utility tracking-display {
+  letter-spacing: var(--lp-letter-spacing-display);
+}
+
+@utility leading-body {
+  line-height: var(--lp-line-height-body);
+}
+
+/* ヒーローのキャッチコピー（言語別サイズ） */
+@utility text-hero {
+  font-size: var(--lp-hero-size);
+  line-height: var(--lp-hero-leading);
+}
+
+/* 縦書き */
+@utility writing-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+/* 極細の金のヘアライン */
+@utility hairline-gold {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(212, 175, 55, 0.7),
+    transparent
+  );
+}
+
+/* 墨のヘアライン（和紙の幕で使う） */
+@utility hairline-ink {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(26, 26, 26, 0.55),
+    transparent
+  );
+}
+
+/* 朱のヘアライン */
+@utility hairline-shu {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(179, 38, 46, 0.8),
+    transparent
+  );
+}
+
+/* 墨の滲みマスク。--ink-size を 0% → 320% へ変えると墨が紙に広がるように現れる */
+@utility ink-mask {
+  mask-image: var(--ink-blob);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: var(--ink-size, 0%) var(--ink-size, 0%);
+  transition: mask-size var(--ink-duration, 1.8s) var(--ease-elegant);
+}
+
+/* 巻物の木軸 */
+@utility scroll-roller {
+  background: linear-gradient(
+    90deg,
+    #3a2a1c 0%,
+    #6b4f33 25%,
+    #8b6a45 50%,
+    #6b4f33 75%,
+    #3a2a1c 100%
+  );
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.6);
+}
+
+/* パフォーマンス用 */
+@utility gpu {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ------------------------------------------------------------------
+ * 墨の滲み（ink blob）マスク画像
+ *   feTurbulence で円を歪ませ、紙に落ちた墨のような輪郭にする
+ * ------------------------------------------------------------------ */
+:root {
+  /* preserveAspectRatio='none' で横長の要素でも mask-size 通りに引き伸ばし、端まで届かせる */
+  --ink-blob: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' preserveAspectRatio='none'%3E%3Cfilter id='f' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.032' numOctaves='3' seed='7'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='40' xChannelSelector='R' yChannelSelector='G'/%3E%3CfeGaussianBlur stdDeviation='0.6'/%3E%3C/filter%3E%3Ccircle cx='100' cy='100' r='64' fill='%23fff' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+
+/* カスタムカーソル有効時はネイティブカーソルを隠す（PC のみ） */
+@media (pointer: fine) {
+  html[data-ink-cursor="on"],
+  html[data-ink-cursor="on"] a,
+  html[data-ink-cursor="on"] button {
+    cursor: none;
+  }
+}
+
+/* 横スクロールギャラリー（モバイル）のスクロールバーを隠す */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ink-mask {
+    transition: none;
+  }
 }
