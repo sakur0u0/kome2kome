@@ -39,11 +39,16 @@ export function ManifestoSection() {
       animate={state}
       className="relative scroll-mt-24 overflow-hidden bg-washi py-section text-sumi"
     >
-      {/* 水墨画の気配：松林図（Public Domain）をモノクロで薄く敷く */}
+      {/*
+       * 水墨画の気配：松林図（Public Domain）を薄く敷く。
+       * 動くレイヤーに filter / mix-blend-mode を掛けると Safari で毎フレーム再合成になるため、
+       * grayscale と multiply は使わない（原画がほぼ墨一色なので見た目はほとんど変わらない）。
+       * パララックスは PC のみ。
+       */}
       <div ref={bgRef} aria-hidden className="absolute inset-0">
         <motion.div
-          style={{ y: bgY }}
-          className="absolute -inset-y-24 inset-x-0 opacity-[0.28] grayscale [mask-image:linear-gradient(to_bottom,transparent_0%,#000_20%,#000_80%,transparent_100%)]"
+          style={{ y: isDesktop ? bgY : 0 }}
+          className="absolute -inset-y-24 inset-x-0 opacity-[0.3] [mask-image:linear-gradient(to_bottom,transparent_0%,#000_20%,#000_80%,transparent_100%)]"
         >
           <Image
             src={siteConfig.images.sumie.src}
@@ -51,11 +56,11 @@ export function ManifestoSection() {
             fill
             sizes="100vw"
             quality={75}
-            className="object-cover object-center mix-blend-multiply"
+            className="object-cover object-center"
           />
         </motion.div>
       </div>
-      <WashiTexture opacity={0.2} />
+      <WashiTexture opacity={0.15} />
 
       <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 px-6 md:px-10 lg:grid-cols-12 lg:gap-12">
         {/* 筆文字「米」 */}

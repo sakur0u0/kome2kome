@@ -55,6 +55,8 @@ export const siteConfig = {
     hero: {
       src: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=2000&auto=format&fit=crop",
     },
+    /** 和紙の質感タイル（自前生成・継ぎ目なし） */
+    washiTile: { src: `${BASE_PATH}/img/texture/washi-tile.webp` },
     /** 壱: 水墨画の気配（長谷川等伯「松林図屏風」Public Domain） */
     sumie: { src: `${PLACEHOLDER}/sumie-pine-trees.jpg` },
     /** 弐: こだわり 3 柱 */

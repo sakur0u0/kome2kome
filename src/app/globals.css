@@ -253,6 +253,20 @@ body {
   transition: mask-size var(--ink-duration, 1.8s) var(--ease-elegant);
 }
 
+/*
+ * 墨の滲みの軽量版（タッチ端末向け）。
+ * mask-size は GPU 合成できず Safari では毎フレーム CPU でマスクを再生成するため、
+ * 合成のみで済む clip-path: circle() と opacity で「にじみ出る」感じを近似する。
+ * --ink-clip を 0% → 75%（対角の端まで届く値）へ遷移させる。
+ */
+@utility ink-clip {
+  clip-path: circle(var(--ink-clip, 0%) at 50% 50%);
+  opacity: var(--ink-opacity, 0);
+  transition:
+    clip-path var(--ink-duration, 1.8s) var(--ease-elegant),
+    opacity calc(var(--ink-duration, 1.8s) * 0.6) var(--ease-elegant);
+}
+
 /* 巻物の木軸 */
 @utility scroll-roller {
   background: linear-gradient(
@@ -299,7 +313,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ink-mask {
+  .ink-mask,
+  .ink-clip {
     transition: none;
   }
 }

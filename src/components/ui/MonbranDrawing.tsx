@@ -165,9 +165,6 @@ export function MonbranDrawing({ progress, className, label }: MonbranDrawingPro
           <stop offset="45%" stopColor="#181818" />
           <stop offset="100%" stopColor="#070707" />
         </linearGradient>
-        <filter id="mb-soft" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="0.35" />
-        </filter>
       </defs>
 
       {/* 金の光（最後） */}
@@ -216,8 +213,8 @@ export function MonbranDrawing({ progress, className, label }: MonbranDrawingPro
         />
       </motion.g>
 
-      {/* お米のクリーム */}
-      <g fill="none" strokeLinecap="round" strokeLinejoin="round" filter="url(#mb-soft)">
+      {/* お米のクリーム（SVG フィルタは掛けない：スクロール連動で動く要素にフィルタがあると Safari で毎フレーム再ラスタライズされる） */}
+      <g fill="none" strokeLinecap="round" strokeLinejoin="round">
         {strands.map((strand, index) => (
           <StrandPath key={index} strand={strand} progress={progress} />
         ))}

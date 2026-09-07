@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useMotionTemplate, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import { useRef } from "react";
 import { cn } from "@/lib/utils/cn";
@@ -42,11 +42,10 @@ export function ColorAwakening({
   });
 
   const progress = useTransform(scrollYProgress, [0.08, wakeAt, 1], [0, 0.85, 1]);
-  const gray = useTransform(progress, (p) => (reduced ? 0 : 1 - p));
-  const sepia = useTransform(progress, (p) => (reduced ? 0 : (1 - p) * 0.35));
-  const contrast = useTransform(progress, (p) => (reduced ? 1 : 1.12 - p * 0.12));
+  // 墨（モノクロ）レイヤーの不透明度。filter を毎フレーム変えるのではなく、
+  // 静的フィルタを掛けた複製を上に重ね、その opacity だけを動かす（合成のみで済む）
+  const inkOpacity = useTransform(progress, (p) => (reduced ? 0 : 1 - p));
   const scale = useTransform(progress, (p) => (reduced ? 1 : 1.08 - p * 0.08));
-  const filter = useMotionTemplate`grayscale(${gray}) sepia(${sepia}) contrast(${contrast})`;
 
   return (
     <div ref={ref} className={cn("group relative", className)}>
@@ -57,7 +56,8 @@ export function ColorAwakening({
         />
       )}
       <div className={cn("relative overflow-hidden bg-washi-deep", aspectClassName)}>
-        <motion.div style={{ filter, scale }} className="absolute inset-0 will-change-transform">
+        <motion.div style={{ scale }} className="absolute inset-0 will-change-transform">
+          {/* 色の層 */}
           <Image
             src={src}
             alt={alt}
@@ -67,6 +67,14 @@ export function ColorAwakening({
             priority={priority}
             className="object-cover"
           />
+          {/* 墨の層（静的フィルタ）。スクロールで薄れていく */}
+          <motion.div
+            aria-hidden
+            style={{ opacity: inkOpacity }}
+            className="absolute inset-0 [filter:grayscale(1)_sepia(0.35)_contrast(1.12)]"
+          >
+            <Image src={src} alt="" fill sizes={sizes} quality={75} priority={priority} className="object-cover" />
+          </motion.div>
         </motion.div>
         {/* 紙の質感を上から薄く重ねる */}
         <div

@@ -2,6 +2,7 @@
 
 import { useInView, useReducedMotion } from "framer-motion";
 import { useRef, type CSSProperties, type ReactNode } from "react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { cn } from "@/lib/utils/cn";
 
 interface InkRevealProps {
@@ -22,7 +23,10 @@ interface InkRevealProps {
 
 /**
  * 墨が紙に落ちて滲むように中身を現す。
- * feTurbulence で歪ませた円を mask-image に使い、mask-size を 0% → 320% へ遷移させる。
+ *
+ * - PC（fine pointer）: feTurbulence で歪ませた円を mask-image に使い、mask-size を 0% → 320% へ遷移
+ * - タッチ端末: mask-size のアニメーションは Safari で毎フレーム CPU 再生成になるため、
+ *   合成のみで済む clip-path: circle() + opacity にフォールバック
  */
 export function InkReveal({
   children,
@@ -37,13 +41,24 @@ export function InkReveal({
   const ref = useRef<HTMLElement | null>(null);
   const inView = useInView(ref, { once, amount });
   const reduced = useReducedMotion();
-  const shown = active ?? inView;
+  const finePointer = useMediaQuery("(hover: hover) and (pointer: fine)");
+  const shown = (active ?? inView) || reduced;
 
-  const style = {
-    "--ink-size": shown || reduced ? "320%" : "0%",
-    "--ink-duration": `${duration}s`,
-    transitionDelay: `${delay}s`,
-  } as CSSProperties;
+  const vars: Record<string, string | number> = finePointer
+    ? {
+        "--ink-size": shown ? "320%" : "0%",
+        "--ink-duration": `${duration}s`,
+        transitionDelay: `${delay}s`,
+      }
+    : {
+        "--ink-clip": shown ? "75%" : "0%",
+        "--ink-opacity": shown ? 1 : 0,
+        "--ink-duration": `${duration}s`,
+        transitionDelay: `${delay}s`,
+      };
+  const style = vars as CSSProperties;
+
+  const mode = finePointer ? "ink-mask" : "ink-clip";
 
   const setRef = (node: HTMLElement | null) => {
     ref.current = node;
@@ -51,13 +66,13 @@ export function InkReveal({
 
   if (as === "span") {
     return (
-      <span ref={setRef} style={style} className={cn("ink-mask inline-block", className)}>
+      <span ref={setRef} style={style} className={cn(mode, "inline-block", className)}>
         {children}
       </span>
     );
   }
   return (
-    <div ref={setRef} style={style} className={cn("ink-mask", className)}>
+    <div ref={setRef} style={style} className={cn(mode, className)}>
       {children}
     </div>
   );

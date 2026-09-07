@@ -41,7 +41,7 @@ export function CraftSection() {
       animate={state}
       className="relative scroll-mt-24 overflow-hidden bg-washi pb-40 pt-section text-sumi md:pb-56"
     >
-      <WashiTexture opacity={0.18} />
+      <WashiTexture opacity={0.13} />
 
       {/* 背景の装飾漢字「極」 */}
       <div aria-hidden className="pointer-events-none absolute -right-10 top-24 w-[18rem] opacity-[0.06] md:w-[26rem]">

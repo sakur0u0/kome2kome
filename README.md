@@ -10,7 +10,7 @@
 - **Next.js 16**（App Router / Turbopack）+ **TypeScript**
 - **Tailwind CSS v4**（`@theme` によるデザイントークン、`data-tone` による幕ごとの前景色切替）
 - **Framer Motion**（スクロール連動 / sticky 演出 / 筆順アニメ / 言語切替クロスフェード）
-- **next/font**（Noto Serif JP / Noto Serif SC / Yuji Syuku（筆文字）/ Cinzel / Playfair Display / Inter）
+- **next/font**（Noto Serif JP / Noto Serif SC / Cinzel / Playfair Display / Inter、筆文字 Yuji Syuku は使用 13 字のサブセット 5.6KB を同梱）
 - **KanjiVG**（漢字の筆順パス。CC BY-SA 3.0 — フッターにクレジット表記）
 
 **公開 URL:** https://sakur0u0.github.io/kome2kome/ （GitHub Pages。`main` へ push すると自動で再デプロイ）
@@ -85,19 +85,27 @@ docs/                        # 調査・提案・実装計画・QA レポート
 
 | 部品 | 仕組み |
 | --- | --- |
-| `InkReveal` | feTurbulence で歪ませた円を `mask-image` に使い、`mask-size` を 0% → 320% へ遷移（墨が紙に滲む） |
-| `BrushKanji` | KanjiVG の筆順パスを `pathLength` で一画ずつ描く。フィルタで滲み・かすれ |
+| `InkReveal` | PC: feTurbulence で歪ませた円を `mask-image` に使い、`mask-size` を 0% → 320% へ遷移（墨が紙に滲む）。タッチ端末: 合成のみで済む `clip-path: circle()` + opacity にフォールバック |
+| `BrushKanji` | KanjiVG の筆順パスを `pathLength` で一画ずつ描く。掠れフィルタは描き終わってから一度だけ掛ける（PC のみ） |
 | `SealStamp` | 朱の落款。スプリングで「押される」 |
-| `ColorAwakening` | スクロール位置で `grayscale / sepia / contrast` を補間（墨 → 色） |
+| `ColorAwakening` | カラー画像の上に静的フィルタ（墨）を掛けた複製を重ね、スクロールで opacity だけを動かす（墨 → 色） |
 | `VerticalType` | 縦書き 1 字 stagger（英語は横書きにフォールバック） |
 | `InkEdge` | 幕の境目の墨の飛沫（SVG） |
-| `WashiTexture` | 領域全体にひとつの feTurbulence を掛けた和紙（タイルの継ぎ目なし） |
+| `WashiTexture` | 事前生成した継ぎ目なしの和紙タイル（`public/img/texture/washi-tile.webp`、FFT で周期化したノイズ）を敷くだけ。ランタイムのフィルタなし |
 | `MonbranDrawing` | 84 本のベジェ曲線を決定的乱数で生成し、スクロール進捗で下から順に描く |
 | `InkMap` | 鴨川・四条通・花見小路・八坂神社を墨線で引くアクセス地図 |
-| `GoldLeafCanvas` | Canvas の金箔。ページ後半で密度が増す。画面面積でスケール、reduced-motion で停止 |
+| `GoldLeafCanvas` | Canvas の金箔。ページ後半で密度が増す。画面面積でスケール、タッチ端末は dpr 1、金箔ゼロの区間は rAF を停止、reduced-motion で無効 |
 | `InkCursor` | PC のみ。墨の点 + 金の輪。リンク上で膨らむ |
 
 OS の「視差効果を減らす」設定は `MotionConfig reducedMotion="user"` と各部品の `useReducedMotion` で尊重します。
+
+### モバイル Safari 向けの負荷対策（方針）
+
+- **動く要素に SVG フィルタを掛けない**（Safari は毎フレーム再ラスタライズする）。掠れは静止後に一度だけ
+- **固定レイヤーに `mix-blend-mode` を使わない**（スクロールごとに全画面再合成になる）
+- **スクロール連動で動かすのは transform / opacity / clip-path のみ**（`filter` や `mask-size` は PC 限定）
+- 大面積のプロシージャルテクスチャは事前生成した画像に置き換える
+- 判定は `(hover: hover) and (pointer: fine)` / `(pointer: coarse)` の `useMediaQuery` で行う
 
 ## 多言語の仕組み
 
@@ -118,6 +126,7 @@ OS の「視差効果を減らす」設定は `MotionConfig reducedMotion="user"
 | 配色・フォント・余白 | `src/app/globals.css` の `@theme inline` / `[data-tone]` |
 | アニメーションの速さ | `src/lib/motion/transitions.ts`、各部品の `duration` prop |
 | 章の装飾漢字を増やす | `src/lib/kanji/strokes.ts` に KanjiVG のパスを追加 |
+| 筆文字で新しい文字を使う | `src/app/fonts.ts` のコメントの手順でサブセット `yuji-syuku-subset.woff2` を作り直す |
 
 ## 公開前に差し替えるもの
 

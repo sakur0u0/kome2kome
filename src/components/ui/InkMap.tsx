@@ -1,7 +1,8 @@
 "use client";
 
 import { motion, useInView, useReducedMotion } from "framer-motion";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { Dictionary } from "@/lib/i18n";
 import { EASE_ELEGANT, EASE_SILK } from "@/lib/motion";
 import { cn } from "@/lib/utils/cn";
@@ -37,7 +38,18 @@ export function InkMap({ labels, className, ariaLabel }: InkMapProps) {
   const ref = useRef<SVGSVGElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.4 });
   const reduced = useReducedMotion();
+  const finePointer = useMediaQuery("(hover: hover) and (pointer: fine)");
   const on = inView || reduced;
+
+  // 筆の掠れ（SVG フィルタ）は描き終わってから一度だけ掛ける。
+  // 動いている線にフィルタがあると Safari は毎フレーム再ラスタライズしてカクつく。
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    if (!on) return;
+    const id = window.setTimeout(() => setSettled(true), reduced ? 0 : (T.labels + 1.2) * 1000);
+    return () => window.clearTimeout(id);
+  }, [on, reduced]);
+  const brush = settled && finePointer;
 
   const stroke = (delay: number, duration = 1.1) => ({
     initial: reduced ? false : { pathLength: 0, opacity: 0 },
@@ -64,14 +76,16 @@ export function InkMap({ labels, className, ariaLabel }: InkMapProps) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <defs>
-        <filter id="map-brush" x="-5%" y="-5%" width="110%" height="110%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="5" result="n" />
-          <feDisplacementMap in="SourceGraphic" in2="n" scale="1.4" xChannelSelector="R" yChannelSelector="G" />
-        </filter>
-      </defs>
+      {finePointer && (
+        <defs>
+          <filter id="map-brush" x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="5" result="n" />
+            <feDisplacementMap in="SourceGraphic" in2="n" scale="1.4" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </defs>
+      )}
 
-      <g filter="url(#map-brush)">
+      <g filter={brush ? "url(#map-brush)" : undefined}>
         {/* 鴨川 */}
         <motion.path
           d="M58 20 C48 70 72 110 60 160 C48 210 74 260 62 310 C52 350 70 390 60 420"
